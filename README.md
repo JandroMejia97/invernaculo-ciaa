@@ -14,6 +14,8 @@ Future stages will include:
 - Control the light level inside your greenhouse.
 - Control the humidity of the soil in your greenhouse.
 
+> This firmware uses the [Firmware v3](https://github.com/epernia/firmware_v3) available in the [epernia](https://github.com/epernia/firmware_v3) repository and the sAPI library.
+
 ## Hardware
 - EDU-CIAA-NXP
 - DHT11
