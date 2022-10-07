@@ -1,9 +1,4 @@
-#include "sapi.h"
-int main( void )
-{
-   boardInit();
-   while(true){
-      gpioToggle(LED);
-      delay(200);
-   }
+int main() {
+   while(1);
+   return 0;
 }
