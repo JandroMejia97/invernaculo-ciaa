@@ -1,4 +1,4 @@
-# Hothouse
+# SiMLI - Sistema para el Monitoreo en Linea de Invernáculos
 
 Hothouse is a project to build a system for monitoring and controlling a greenhouse. It is a work in progress.
 
