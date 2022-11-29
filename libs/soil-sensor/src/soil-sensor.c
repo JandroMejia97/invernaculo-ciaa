@@ -14,7 +14,7 @@
 
 #ifndef CAPACITIVE_SENSOR_PIN
 
-#warning "CAPACITIVE_SENSOR_PIN is not defined, using T_FIL1 as default value"
+#warning "CAPACITIVE_SENSOR_PIN is not defined, using CH3 as default value"
 #define CAPACITIVE_SENSOR_PIN CH3
 
 #endif
