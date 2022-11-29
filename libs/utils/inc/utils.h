@@ -12,5 +12,9 @@
 
 #ifndef _UTILS_H_
 #define _UTILS_H_
+
+#include "sapi_datatypes.h"
+
 char* itoa(int value, char* result, int base);
+uint8_t map(uint16_t x, uint16_t in_min, uint16_t in_max, uint8_t out_min, uint8_t out_max);
 #endif /* _UTILS_H_ */

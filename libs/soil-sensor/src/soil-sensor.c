@@ -15,7 +15,7 @@
 #ifndef CAPACITIVE_SENSOR_PIN
 
 #warning "CAPACITIVE_SENSOR_PIN is not defined, using T_FIL1 as default value"
-#define CAPACITIVE_SENSOR_PIN T_FIL1
+#define CAPACITIVE_SENSOR_PIN CH3
 
 #endif
 
@@ -23,6 +23,10 @@ static uint16_t capacitiveSensorValue = 0;
 
 uint16_t getCapacitiveSensorValue(void) {
   return capacitiveSensorValue;
+}
+
+uint8_t getMapedCapacitiveSensorValue(void) {
+  return map(capacitiveSensorValue, 0, 1023, 0, 100);
 }
 
 void capacitiveSensorInit(void) {

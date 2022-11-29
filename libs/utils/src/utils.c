@@ -28,3 +28,16 @@ char* itoa(int value, char* result, int base) {
    }
    return result;
 }
+
+/**
+ * @brief Map a value from one range to another
+ * 
+ * @param x Value to map
+ * @param in_min Minimum value of the input range
+ * @param in_max Maximum value of the input range
+ * @param out_min Minimum value of the output range
+ * @param out_max Maximum value of the output range
+ */
+uint8_t map(uint16_t x, uint16_t in_min, uint16_t in_max, uint8_t out_min, uint8_t out_max) {
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}

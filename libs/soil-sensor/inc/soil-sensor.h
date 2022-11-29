@@ -15,6 +15,7 @@
 #define _SOIL_SENSOR_H_
 
 uint16_t getCapacitiveSensorValue(void);
+uint8_t getMapedCapacitiveSensorValue(void);
 
 void capacitiveSensorInit(void);
 uint16_t capacitiveSensorRead(void);
