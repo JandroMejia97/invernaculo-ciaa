@@ -33,20 +33,18 @@
 
 /* Date: 2017-11-13 */
 
-#ifndef _SAPI_DHT11_H_
-#define _SAPI_DHT11_H_
+#ifndef _DHT11_H_
+#define _DHT11_H_
 
 #include "sapi_datatypes.h"
+#include "sapi_dht11.h"
 
 /*==================[c++]====================================================*/
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define dht11Config dht11Init
-
-void dht11Init( int32_t gpio );
-bool_t dht11Read( float *phum, float *ptemp );
+bool_t dht11CustomRead( uint16_t *phum, uint16_t *ptemp );
 
 /*==================[c++]====================================================*/
 #ifdef __cplusplus

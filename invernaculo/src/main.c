@@ -1,7 +1,7 @@
 #include "sapi.h"
+#include "dht11.h"
 #include "soil-sensor.h"
 #include "utils.h"
-#include "sapi_dht11.h"
 
 int main(void){
 
@@ -80,7 +80,7 @@ int main(void){
          // Sección para el sensor DHT11
          delayRead( &delay1 );
          uartWriteString( UART_USB, "Temperatura: " );
-         dht11_read(&muestraDHT_TEMP, &muestraDHT_HUM);
+         dht11CustomRead(&muestraDHT_TEMP, &muestraDHT_HUM);
          itoa( muestraDHT_TEMP, uartBuff, 10);
          uartWriteString( UART_USB, uartBuff );
          uartWriteString( UART_USB, "° \r\n" );
