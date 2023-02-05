@@ -20,7 +20,7 @@
 #endif
 
 static uint16_t capacitiveSensorValue = 0;
-
+static uint16_t valorEnPorcentaje = 0;
 uint16_t getCapacitiveSensorValue(void) {
   return capacitiveSensorValue;
 }
@@ -35,5 +35,6 @@ void capacitiveSensorInit(void) {
 
 uint16_t capacitiveSensorRead(void) {
   capacitiveSensorValue = adcRead(CAPACITIVE_SENSOR_PIN);
-  return capacitiveSensorValue;
+  valorEnPorcentaje = (capacitiveSensorValue * 100) / 1023;
+  return valorEnPorcentaje;
 }
