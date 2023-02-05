@@ -1,6 +1,7 @@
 #include "sapi.h"
 #include "soil-sensor.h"
 #include "utils.h"
+#include "sapi_dht11.h"
 
 int main(void){
 
@@ -32,14 +33,18 @@ int main(void){
    /* Variable para almacenar el valor leido del ADC CH1 */
    uint16_t muestraSOIL = 0;
    uint16_t muestraLDR = 0;
+   uint16_t muestraDHT_TEMP = 0;
+   uint16_t muestraDHT_HUM = 0;
 
    /* Variables de delays no bloqueantes */
    delay_t delay1;
    delay_t delay2;
+   delay_t lecturas;
 
    /* Inicializar Retardo no bloqueante con tiempo en ms */
-   delayConfig( &delay1, 500 );
+   delayConfig( &delay1, 1000 );
    delayConfig( &delay2, 200 );
+
 
    /* ------------- REPETIR POR SIEMPRE ------------- */
    while(1) {
@@ -71,6 +76,16 @@ int main(void){
          uartWriteString( UART_USB, uartBuff );
          uartWriteString( UART_USB, "\% \r\n" );
          dacWrite( DAC, muestraLDR );
+
+         // Sección para el sensor DHT11
+         delayRead( &delay1 );
+         uartWriteString( UART_USB, "Temperatura: " );
+         dht11_read(&muestraDHT_TEMP, &muestraDHT_HUM);
+         itoa( muestraDHT_TEMP, uartBuff, 10);
+         uartWriteString( UART_USB, uartBuff );
+         uartWriteString( UART_USB, "° \r\n" );
+         dacWrite( DAC, muestraDHT_TEMP );
+
       }
 
       /* delayRead retorna TRUE cuando se cumple el tiempo de retardo */
