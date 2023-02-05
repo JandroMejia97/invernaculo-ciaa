@@ -10,7 +10,7 @@
 
 #include "sapi.h"
 
-#include "soil-sensor.h"
+#include "ldr.h"
 
 #ifndef LDR_PIN
 
