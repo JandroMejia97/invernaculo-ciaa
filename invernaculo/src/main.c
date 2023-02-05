@@ -2,38 +2,115 @@
 #include "soil-sensor.h"
 #include "utils.h"
 
-int main() {
+char* itoa(int value, char* result, int base) {
+   // check that the base if valid
+   if (base < 2 || base > 36) { *result = '\0'; return result; }
+
+   char* ptr = result, *ptr1 = result, tmp_char;
+   int tmp_value;
+
+   do {
+      tmp_value = value;
+      value /= base;
+      *ptr++ = "zyxwvutsrqponmlkjihgfedcba9876543210123456789abcdefghijklmnopqrstuvwxyz" [35 + (tmp_value - value * base)];
+   } while ( value );
+
+   // Apply negative sign
+   if (tmp_value < 0) *ptr++ = '-';
+   *ptr-- = '\0';
+   while(ptr1 < ptr) {
+      tmp_char = *ptr;
+      *ptr--= *ptr1;
+      *ptr1++ = tmp_char;
+   }
+   return result;
+}
+
+int main(void){
+
+   /* ------------- INICIALIZACIONES ------------- */
+
+   /* Inicializar la placa */
    boardConfig();
 
-   // UART for debug messages
-   uartConfig(UART_USB, 115200);
+   /* Inicializar UART_USB a 115200 baudios */
+   uartConfig( UART_USB, 115200 );
 
-   // Initialize the capacitive sensor
-   capacitiveSensorInit();
+   /* Inicializar AnalogIO */
+   /* Posibles configuraciones:
+    *    ADC_ENABLE,  ADC_DISABLE,
+    *    ADC_ENABLE,  ADC_DISABLE,
+    */
+   adcConfig( ADC_ENABLE ); /* ADC */
+   dacConfig( DAC_ENABLE ); /* DAC */
 
-   // Buffer for the capacitive sensor value
-   static char buffer[10];
+   /* ConfiguraciÃ³n de estado inicial del Led */
+   bool_t ledState1 = OFF;
 
-   // Delay for the main loop in milliseconds
-   delay_t delay;
-   delayConfig(&delay, 1000);
+   /* Contador */
+   uint32_t i = 0;
 
-   while (1) {
-      // Read the capacitive sensor value
-      capacitiveSensorRead();
+   /* Buffer */
+   static char uartBuff[10];
 
-      // Convert the capacitive sensor value to string
-      itoa(getCapacitiveSensorValue(), buffer, 10);
+   /* Variable para almacenar el valor leido del ADC CH1 */
+   uint16_t muestraSOIL = 0;
+   uint16_t muestraLDR = 0;
 
-      // Print the capacitive sensor value
-      uartWriteString(UART_USB, "Capacitive sensor value: ");
-      uartWriteString(UART_USB, buffer);
-      uartWriteString(UART_USB, "\r\n");
+   /* Variables de delays no bloqueantes */
+   delay_t delay1;
+   delay_t delay2;
 
-      // Wait for the delay
-      if (delayRead(&delay)) {
-         delayWrite(&delay, 1000);
+   /* Inicializar Retardo no bloqueante con tiempo en ms */
+   delayConfig( &delay1, 500 );
+   delayConfig( &delay2, 200 );
+
+   /* ------------- REPETIR POR SIEMPRE ------------- */
+   while(1) {
+
+      /* delayRead retorna TRUE cuando se cumple el tiempo de retardo */
+      if ( delayRead( &delay1 ) ){
+         // Sección para el sensor de humedad de la tierra
+         /* Leo la Entrada Analogica AI0 - ADC0 CH1 */
+         muestraSOIL = (1023 - adcRead ( CH3 )) * 100 / 613;
+
+         /* EnvÃ­o la primer parte del mnesaje a la Uart */
+         uartWriteString( UART_USB, "Humedad de la tierra: " );
+
+         /* ConversiÃ³n de muestra entera a ascii con base decimal */
+         itoa( muestraSOIL, uartBuff, 10 ); /* 10 significa decimal */
+
+         /* Enviar muestra y Enter */
+         uartWriteString( UART_USB, uartBuff );
+         uartWriteString( UART_USB, "\% \r\n" );
+
+         /* Escribo la muestra en la Salida AnalogicaAO - DAC */
+         dacWrite( DAC, muestraSOIL );
+
+         // Sección para el sensor de luz
+         delayRead( &delay1 );
+         muestraLDR = 100 - (adcRead( CH1 ) * 100 / 1023);
+         uartWriteString( UART_USB, "Cantidad de luz: " );
+         itoa( muestraLDR, uartBuff, 10 );
+         uartWriteString( UART_USB, uartBuff );
+         uartWriteString( UART_USB, "\% \r\n" );
+         dacWrite( DAC, muestraLDR );
       }
+
+      /* delayRead retorna TRUE cuando se cumple el tiempo de retardo */
+      if ( delayRead( &delay2 ) ){
+         ledState1 = !ledState1;
+         gpioWrite( LED1, ledState1 );
+
+         /* Si pasaron 20 delays le aumento el tiempo */
+         i++;
+         if( i == 20 )
+            delayWrite( &delay2, 1000 );
+      }
+
    }
-   return 0;
+
+   /* NO DEBE LLEGAR NUNCA AQUI, debido a que a este programa no es llamado
+      por ningun S.O. */
+   return 0 ;
 }
