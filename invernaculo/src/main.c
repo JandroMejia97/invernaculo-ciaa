@@ -80,8 +80,9 @@ int main(void){
          // Sección para el sensor DHT11
          delayRead( &delay1 );
          uartWriteString( UART_USB, "Temperatura: " );
-         dht11Read(&muestraDHT_TEMP, &muestraDHT_HUM);
-         itoa( muestraDHT_TEMP, uartBuff, 10);
+         dht11Read(&muestraDHT_HUM, &muestraDHT_TEMP);
+         int temp = muestraDHT_TEMP;
+         itoa(temp, uartBuff, 10);
          uartWriteString( UART_USB, uartBuff );
          uartWriteString( UART_USB, "° \r\n" );
          dacWrite( DAC, muestraDHT_TEMP );

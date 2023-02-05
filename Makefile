@@ -17,7 +17,7 @@ BOARD = edu_ciaa_nxp
 # Program path and name ------------------------------------------------
 
 # Program path and name default values
-PROGRAM_PATH = examples/c
+PROGRAM_PATH =
 PROGRAM_NAME = app
 
 # Program path and name from an external program.mk file
