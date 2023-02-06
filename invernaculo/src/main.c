@@ -42,15 +42,14 @@ int main(void){
    float muestraDHT_HUM = 0;
    uint16_t temp = 0;
    uint16_t hum = 0;
+   uint16_t tick = 1;
    
 
    /* Variables de delays no bloqueantes */
    delay_t delay1;
-   delay_t delay2;
 
    /* Inicializar Retardo no bloqueante con tiempo en ms */
-   delayConfig(&delay1, 1000);
-   delayConfig(&delay2, 200);
+   delayConfig(&delay1, 30000); // 5 Minutos
 
 
    /* ------------- REPETIR POR SIEMPRE ------------- 
@@ -66,42 +65,34 @@ int main(void){
       /* delayRead retorna TRUE cuando se cumple el tiempo de retardo */
       if (delayRead(&delay1 ) ){
          // Seccion para el sensor DHT11
-         delayRead(&delay1);
-
          dht11Read(&muestraDHT_HUM, &muestraDHT_TEMP);
          // Envio el 0 para avisarle a la uart que el dato proximo corresponde a la temperatura
          int temp = round(muestraDHT_TEMP);
          sendToUart('0', temp);
-         
          // Ahora envio un 1 correspondiente a la humedad del aire
          temp = round(muestraDHT_HUM);
          sendToUart('1', temp);
 
-         // Seccion para el sensor de humedad de la tierra
-         /* Leo la Entrada Analogica AI0 - ADC0 CH1 */
-         muestraSOIL = (1023 - adcRead(CH3)) * 100 / 613;
-
-         // Envio un 2 correspondiente a la humedad de la tierra
-         sendToUart('2', muestraSOIL);
-
          // Seccion para el sensor de luz
-         delayRead(&delay1);
-         muestraLDR = 100 - (adcRead(CH1) * 100 / 1023);
-         // Envio un 3 para avisar que voy a enviar informacion acerca de la cantidad de luz
-         sendToUart('3', muestraLDR);
+         if (tick % 3 == 0){
+            muestraLDR = 100 - (adcRead(CH1) * 100 / 1023);
+            // Envio un 3 para avisar que voy a enviar informacion acerca de la cantidad de luz
+            sendToUart('2', muestraLDR);
+         }
+
+         // Seccion para el sensor de humedad de la tierra
+         if (tick % 6 == 0){
+            muestraSOIL = (1023 - adcRead(CH3)) * 100 / 613;
+            // Envio un 3 correspondiente a la humedad de la tierra
+            sendToUart('3', muestraSOIL);
+         }
+
+         if (tick == 600) {
+            tick = 0;
+         } else {
+            tick++;
+         }
       }
-
-      /* delayRead retorna TRUE cuando se cumple el tiempo de retardo */
-      if (delayRead(&delay2 ) ){
-         ledState1 = !ledState1;
-         gpioWrite(LED1, ledState1);
-
-         /* Si pasaron 20 delays le aumento el tiempo */
-         i++;
-         if(i == 20 )
-            delayWrite(&delay2, 1000);
-      }
-
    }
 
    /* NO DEBE LLEGAR NUNCA AQUI, debido a que a este programa no es llamado
