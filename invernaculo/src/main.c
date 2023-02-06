@@ -1,6 +1,11 @@
+#include <string.h> 
+#include<stdio.h>
+#include <math.h>
 #include "sapi.h"
 #include "soil-sensor.h"
 #include "utils.h"
+
+void sendToUart(char variableType, int data);
 
 int main(void){
 
@@ -9,17 +14,17 @@ int main(void){
    /* Inicializar la placa */
    boardConfig();
 
-   /* Inicializar UART_USB a 115200 baudios */
-   uartConfig( UART_USB, 115200 );
+   /* Inicializar UART_GPIO a 115200 baudios */
+   uartConfig(UART_GPIO, 115200);
+   uartConfig(UART_USB, 115200);
 
    /* Inicializar AnalogIO */
    /* Posibles configuraciones:
     *    ADC_ENABLE,  ADC_DISABLE,
     *    ADC_ENABLE,  ADC_DISABLE,
     */
-   adcConfig( ADC_ENABLE ); /* ADC */
-   dacConfig( DAC_ENABLE ); /* DAC */
-   dht11Init( GPIO1 ); // Inicializo el sensor DHT11
+   adcConfig(ADC_ENABLE); /* ADC */
+   dht11Init(GPIO0); // Inicializo el sensor DHT11
 
    /* ConfiguraciÃ³n de estado inicial del Led */
    bool_t ledState1 = OFF;
@@ -35,69 +40,66 @@ int main(void){
    uint16_t muestraLDR = 0;
    float muestraDHT_TEMP = 0;
    float muestraDHT_HUM = 0;
+   uint16_t temp = 0;
+   uint16_t hum = 0;
+   
 
    /* Variables de delays no bloqueantes */
    delay_t delay1;
    delay_t delay2;
-   delay_t lecturas;
 
    /* Inicializar Retardo no bloqueante con tiempo en ms */
-   delayConfig( &delay1, 1000 );
-   delayConfig( &delay2, 200 );
+   delayConfig(&delay1, 1000);
+   delayConfig(&delay2, 200);
 
 
-   /* ------------- REPETIR POR SIEMPRE ------------- */
+   /* ------------- REPETIR POR SIEMPRE ------------- 
+      El código funciona de la siguiente manera, realizara una lectura cada determinado tiempo (para uso real serían los minutos especificados en el informe)
+      Para nuestras pruebas es 1 segundo. 
+      Caracteres para identificar datos: 0 - Temperatura del Aire / 1 - Humedad del Aire / 2 - Humedad de la Tierra / 3 - Cantidad de Luz
+      Se lee el sensor, se envía a la UART un caracter para indicar cual será el dato a enviar. Por ejemplo, si la uart envía un 0, estará esperando que el dato que
+      lea a continuación sea de temperatura. Proximamente se envia a la UART su correspondiente dato y se pasa al próximo sensor.
+   */
    while(1) {
+      char temp[10];
 
       /* delayRead retorna TRUE cuando se cumple el tiempo de retardo */
-      if ( delayRead( &delay1 ) ){
-         // Sección para el sensor de humedad de la tierra
-         /* Leo la Entrada Analogica AI0 - ADC0 CH1 */
-         muestraSOIL = (1023 - adcRead ( CH3 )) * 100 / 613;
+      if (delayRead(&delay1 ) ){
+         // Seccion para el sensor DHT11
+         delayRead(&delay1);
 
-         /* EnvÃ­o la primer parte del mnesaje a la Uart */
-         uartWriteString( UART_USB, "Humedad de la tierra: " );
-
-         /* ConversiÃ³n de muestra entera a ascii con base decimal */
-         itoa( muestraSOIL, uartBuff, 10 ); /* 10 significa decimal */
-
-         /* Enviar muestra y Enter */
-         uartWriteString( UART_USB, uartBuff );
-         uartWriteString( UART_USB, "\% \r\n" );
-
-         /* Escribo la muestra en la Salida AnalogicaAO - DAC */
-         dacWrite( DAC, muestraSOIL );
-
-         // Sección para el sensor de luz
-         delayRead( &delay1 );
-         muestraLDR = 100 - (adcRead( CH1 ) * 100 / 1023);
-         uartWriteString( UART_USB, "Cantidad de luz: " );
-         itoa( muestraLDR, uartBuff, 10 );
-         uartWriteString( UART_USB, uartBuff );
-         uartWriteString( UART_USB, "\% \r\n" );
-         dacWrite( DAC, muestraLDR );
-
-         // Sección para el sensor DHT11
-         delayRead( &delay1 );
-         uartWriteString( UART_USB, "Temperatura: " );
          dht11Read(&muestraDHT_HUM, &muestraDHT_TEMP);
-         int temp = muestraDHT_TEMP;
-         itoa(temp, uartBuff, 10);
-         uartWriteString( UART_USB, uartBuff );
-         uartWriteString( UART_USB, "° \r\n" );
-         dacWrite( DAC, muestraDHT_TEMP );
+         // Envio el 0 para avisarle a la uart que el dato proximo corresponde a la temperatura
+         int temp = round(muestraDHT_TEMP);
+         sendToUart('0', temp);
+         
+         // Ahora envio un 1 correspondiente a la humedad del aire
+         temp = round(muestraDHT_HUM);
+         sendToUart('1', temp);
 
+         // Seccion para el sensor de humedad de la tierra
+         /* Leo la Entrada Analogica AI0 - ADC0 CH1 */
+         muestraSOIL = (1023 - adcRead(CH3)) * 100 / 613;
+
+         // Envio un 2 correspondiente a la humedad de la tierra
+         sendToUart('2', muestraSOIL);
+
+         // Seccion para el sensor de luz
+         delayRead(&delay1);
+         muestraLDR = 100 - (adcRead(CH1) * 100 / 1023);
+         // Envio un 3 para avisar que voy a enviar informacion acerca de la cantidad de luz
+         sendToUart('3', muestraLDR);
       }
 
       /* delayRead retorna TRUE cuando se cumple el tiempo de retardo */
-      if ( delayRead( &delay2 ) ){
+      if (delayRead(&delay2 ) ){
          ledState1 = !ledState1;
-         gpioWrite( LED1, ledState1 );
+         gpioWrite(LED1, ledState1);
 
          /* Si pasaron 20 delays le aumento el tiempo */
          i++;
-         if( i == 20 )
-            delayWrite( &delay2, 1000 );
+         if(i == 20 )
+            delayWrite(&delay2, 1000);
       }
 
    }
@@ -105,4 +107,21 @@ int main(void){
    /* NO DEBE LLEGAR NUNCA AQUI, debido a que a este programa no es llamado
       por ningun S.O. */
    return 0 ;
+}
+
+void sendToUart(char variableType, int data) {
+   char dataString[10];
+   char uartBuff[10];
+
+   dataString[0] = variableType;
+   dataString[1] = '\0';
+
+   itoa(data, uartBuff, 10);
+
+   strcat(dataString, uartBuff);
+
+   /* Enviar muestra y Enter */
+   strcat(dataString, "\r\n");
+   uartWriteString(UART_GPIO, dataString);
+   uartWriteString(UART_USB, dataString);
 }
